@@ -1,0 +1,24 @@
+models:
+  - name: stg_stripe__payments
+    description: Staging model for payments table in stripe source
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['fail', 'success']
+      - name: payment_method
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['credit_card', 'gift_card', 'coupon', 'bank_transfer']

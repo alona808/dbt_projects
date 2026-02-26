@@ -1,0 +1,10 @@
+
+# https://github.com/dbt-labs/dbt-codegen/tree/0.14.0/?tab=readme-ov-file#generate_base_model-source
+
+# to generate stg models, run this command in the terminal
+# for multiple arguments, use the dict syntax
+
+dbtf run-operation generate_base_model --args '{"source_name": "jaffle_shop", "table_name": "customers"}'
+
+# to check the freshness of raw tables use
+dbtf source freshness

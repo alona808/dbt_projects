@@ -1,0 +1,10 @@
+# https://github.com/dbt-labs/dbt-codegen/tree/0.14.0/#generate_source-source
+
+# run this command in the teerminal
+# for multiple arguments, use the dict syntax
+# dbtf run-operation generate_source --args '{"schema_name": "jaffle_shop", "database_name": "raw"}'
+
+
+packages:
+  - package: dbt-labs/codegen
+    version: 0.13.1 ## update to latest version here

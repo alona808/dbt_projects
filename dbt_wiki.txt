@@ -8,3 +8,8 @@ dbtf run-operation generate_base_model --args '{"source_name": "jaffle_shop", "t
 
 # to check the freshness of raw tables use
 dbtf source freshness
+
+# python models & dbt
+python -m venv dbt_env
+dbt_env\Scripts\activate
+pip install dbt-core dbt-snowflake

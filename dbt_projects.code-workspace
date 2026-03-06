@@ -4,5 +4,9 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"[sql]": {
+			"editor.defaultFormatter": null
+		}
+	}
 }

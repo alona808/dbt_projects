@@ -41,3 +41,9 @@ models:
     marts:
       +materialized: table
 
+    demo_refactor_sql:
+      legacy:
+        +materialized: view
+      marts:
+        +materialized: table
+

@@ -8,3 +8,5 @@
 packages:
   - package: dbt-labs/codegen
     version: 0.13.1 ## update to latest version here
+  - package: dbt-labs/audit_helper
+    version: 0.13.0

@@ -16,101 +16,88 @@ payments as (
 
 ),
 
+-- Logical CTEs
 
--- Marts models
-customer_order_history as (
+completed_payments as (
+
   select
-    c.id as customer_id,
-    c.full_name,
-    min(o.order_date) as first_order_date,
-    min(
-      case
-        when o.order_status not in ('returned', 'returned_pending') then o.order_date
-      end
-    ) as first_non_returned_order_date,
-    max(
-      case
-        when o.order_status not in ('returned', 'returned_pending') then o.order_date
-      end
-    ) as last_most_recent_non_returned_order_date,
-    coalesce(max(o.user_order_seq), 0) as order_count,
-    count(
-      case
-        when o.order_status != 'returned' then 1
-      end
-    ) as non_returned_order_count,
-    round(
-      sum(
-        case
-          when o.order_status not in ('returned', 'returned_pending')
-          then p.payment_amount
-          else 0
-        end
-      ),
-      2
-    ) as total_lifetime_value,
-    round(
-      (
-        sum(
-          case
-            when o.order_status not in ('returned', 'returned_pending')
-            then p.payment_amount
-            else 0
-          end
-        )
-      ) / nullif(
-        count(
-          case
-            when o.order_status not in ('returned', 'returned_pending') then 1
-          end
-        ),
-        0
-      ),
-      2
-    ) as avg_non_returned_value,
-    array_agg(distinct o.order_id order by o.order_id) as order_ids
-  from orders as o
-  join customers as c
-    on o.customer_id = c.id
-  join payments as p
-    on o.order_id = p.order_id
-  where o.order_status != 'pending'
-  group by c.id, c.full_name
+    order_id,
+    max(payment_created_at) as payment_finalized_date,
+    sum(payment_amount) as total_amount_paid
+  from payments
+  where payment_status <> 'fail'
+  group by 1
+
 ),
 
-final as (
+paid_orders as (
+
   select
-    o.order_id,
-    o.customer_id,
-    c.full_name,
-    coh.first_order_date,
-    coh.order_count,
-    coh.total_lifetime_value,
-    round(p.payment_amount, 2) as order_value_dollars,
-    o.order_status,
-    p.payment_status
-  from orders as o
+    orders.order_id,
+    orders.customer_id,
+    orders.order_placed_at,
+    orders.order_status,
 
-  join customers as c
-    on o.customer_id = c.id
+    completed_payments.total_amount_paid,
+    completed_payments.payment_finalized_date,
 
-  join customer_order_history as coh
-    on o.customer_id = coh.customer_id
+    customers.customer_first_name,
+    customers.customer_last_name
+  from orders
+  left join completed_payments on orders.order_id = completed_payments.order_id
+  left join customers on orders.customer_id = customers.customer_id
 
-  left join payments as p
-    on o.order_id = p.order_id
+),
+
+-- Final CTE
+
+final as (
+
+  select
+    order_id,
+    customer_id,
+    order_placed_at,
+    order_status,
+    total_amount_paid,
+    payment_finalized_date,
+    customer_first_name,
+    customer_last_name,
+
+    -- sales transaction sequence
+    row_number() over (order by order_id) as transaction_seq,
+
+    -- customer sales sequence
+    row_number() over (partition by customer_id order by order_id) as customer_sales_seq,
+
+    -- new vs returning customer
+    case
+      when (
+      rank() over (
+      partition by customer_id
+      order by order_placed_at, order_id
+      ) = 1
+    ) then 'new'
+    else 'return' end as nvsr,
+
+    -- customer lifetime value
+    sum(total_amount_paid) over (
+      partition by customer_id
+      order by order_placed_at
+      ) as customer_lifetime_value,
+
+    -- first day of sale
+    first_value(order_placed_at) over (
+      partition by customer_id
+      order by order_placed_at
+      ) as fdos
+
+    from paid_orders
+
 )
 
-select
-  order_id,
-  customer_id,
-  full_name,
-  first_order_date,
-  order_count,
-  total_lifetime_value,
-  order_value_dollars,
-  order_status,
-  payment_status
+-- Simple Select Statement
+
+select *
 from final
 
 

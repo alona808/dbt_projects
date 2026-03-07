@@ -13,3 +13,7 @@ dbtf source freshness
 python -m venv dbt_env
 dbt_env\Scripts\activate
 pip install dbt-core dbt-snowflake
+
+
+
+

@@ -1,0 +1,15 @@
+# DEMO https://docs.getdbt.com/docs/build/udfs
+functions:
+  - name: is_positive_int       # required
+    description: My UDF that returns 1 if a string represents a naked positive integer (like "10", "+8" is not allowed). # optional
+    config:
+      schema: udf_schema
+      database: udf_db
+      volatility: deterministic
+    arguments:                  # optional
+      - name: a_string          # required if arguments is specified
+        data_type: string       # required if arguments is specified
+        description: The string that I want to check if it's representing a positive integer (like "10") 
+        default_value: "'1'"    # optional, available in Snowflake and Postgres
+    returns:                    # required
+      data_type: integer        # required
